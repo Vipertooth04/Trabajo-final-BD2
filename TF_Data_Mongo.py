@@ -1,6 +1,10 @@
+#Importamos csv para leer el archivo csv
 import csv
 
+#Importamos MongoClient para poder conectarnos al Cluster y crear la base de datos y coleccion
 from pymongo import MongoClient
+
+#Importamos datetime y timedelta para la creacion del atributo de aired
 from datetime import datetime, timedelta
 
 #Extraemos credenciales del archivo config.py
@@ -18,27 +22,29 @@ csv_file = r"anime-filtered.csv"
 with open(csv_file, "r", encoding="utf-8") as file:
     reader = csv.DictReader(file)
     for row in reader:
+        #Todos los atributos que deseamos almacenar en forma de array les hacemos un split y los separamos al momento de encontrar un ", "
         genres = row["Genres"].split(", ")
         producers = row["Producers"].split(", ")
         licensors = row["Licensors"].split(", ")
-
+        
+        #En el caso de aired, lo almacenamos en su formato de string y creamos dos variables para almacenar el start y end
         aired_str = row["Aired"]
         aired_start = None
         aired_end = None
 
         if aired_str.endswith(" to ?"):
             formato_fecha = "%b %d, %Y"  # Formato de la cadena de fecha
-            try:
+            try: #Intentamos crear los dos atributos donde extraemos la cantidad del string necesario en el formato y lo combinamos 
                 aired_start = datetime.strptime(aired_str[:-6], formato_fecha).date()
                 aired_start = datetime.combine(aired_start, datetime.min.time())
                 aired_end = None
             except ValueError:
                 aired_start = None
                 aired_end = None
-        elif "to" in aired_str:
+        elif "to" in aired_str: #En caso si tengamos fecha de inicio y final
             formato_fecha = "%b %d, %Y"  # Formato de la cadena de fecha
-            aired_dates = aired_str.split(" to ")
-            try:
+            aired_dates = aired_str.split(" to ") #Los separamos 
+            try: #Creamos ambos valores
                 aired_start = datetime.strptime(aired_dates[0], formato_fecha).date()
                 aired_start = datetime.combine(aired_start, datetime.min.time())
                 aired_end = datetime.strptime(aired_dates[1], formato_fecha).date()
@@ -56,8 +62,11 @@ with open(csv_file, "r", encoding="utf-8") as file:
             aired_start = None
             aired_end = None
 
+        
+        #En caso de ranked almacenamos solo si es un numero entero, caso contrario lo marcamos como None
         ranked = int(row["Ranked"]) if row["Ranked"].isdigit() else None
 
+        #Creamos nuestro documento con todos sus atributos 
         document = {
             "Name": row["Name"],
             "Score": float(row["Score"]),
@@ -81,6 +90,8 @@ with open(csv_file, "r", encoding="utf-8") as file:
             "On-Hold": int(row["On-Hold"]),
             "Dropped": int(row["Dropped"]),
         }
+        #Insertamos los documentos a la coleccion
         collection.insert_one(document)
 
-print("Se llenaron todos los {db.collection.count()}")
+print(f"Se llenaron todos los {collection.count_documents({})} documentos")
+
