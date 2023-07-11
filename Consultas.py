@@ -13,7 +13,6 @@ query = {
     "Genres":{"$eq":"Action"},
     "Score": {"$gt": 8},
     "Source": {"$ne": "Original"}
-
 }
 
 #Almacenamos los resultados obtenidos en una variable
@@ -60,8 +59,8 @@ for result in limited_results:
     #Creacion de nodos de genero
     genres_array=result["Genres"]
     for genre in genres_array:
-        Genre_Node = Node("Genre", Name=genre) #Creamos el nodo
-        graph.merge(Genre_Node, "Genre", "Name")# Hacemos un .merge para no tener nodos repetidos y facilitar las relaciones
+        Genre_Node = Node("Genres", Name=genre) #Creamos el nodo
+        graph.merge(Genre_Node, "Genres", "Name")# Hacemos un .merge para no tener nodos repetidos y facilitar las relaciones
         relationship = Relationship(anime_node, "genero:", Genre_Node)# Creamos una relacion cada ves que se cree el nodo
         graph.create(relationship)
 
@@ -93,6 +92,10 @@ for result in limited_results:
     #Relacion entre anime y tipo
     relacion2 = Relationship(anime_node,"Tipo:",Type_node)
     graph.create(relacion2)
+
+    #relacion entre anime y estudios
+    relacion5=Relationship(anime_node,"Estudio:",Studios_node)
+    graph.create(relacion5)
 
 
 print("Se crearon los nodos")
