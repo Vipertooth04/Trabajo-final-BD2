@@ -9,17 +9,36 @@ db=client["PROYECTO"]
 collection=db["uwu"]
 
 #Query que nos hara el .find en la base de datos
-query = {
-    "Genres":{"$eq":"Action"},
-    "Score": {"$gt": 8},
-    "Source": {"$ne": "Original"}
+query1 = {
+    "Genres":"Action",
+    "Score":{"$gt":5},
+    "Source":"Manga",
+    "Members":{"$gt":10000},
+    "Watching":{"$gt":3000}
+}
+query2 = {"Producers":"Bandai Visual","Source":"Manga","Score":{"$gt":5}}
+query3 = {
+    "$and": [
+        {"Type": {"$eq": "OVA"}},
+        {"Studios": {"$regex": "Sunrise"}},
+        {"Watching":{"$gte":1000}}
+    ]
+}
+query4={
+    "$or":[
+        {"$expr":{
+            "$lt":[{"$size":"$Genres"},2]
+        }},
+        {"Genres":"Action"},
+        {"Ranked":{"$lte":50}}
+    ]
 }
 
 #Almacenamos los resultados obtenidos en una variable
-results = collection.find(query).sort("Popularity", 1).limit(5)
+results = collection.find(query4).sort("Popularity", 1)
 
 #Limitamos a 30 la cantidad de iteraciones de nuestro nodo
-limited_results=itertools.islice(results,30)
+limited_results=itertools.islice(results,5)
 
 # Conexión a Neo4j
 graph = Graph("bolt://localhost:7687", auth=("neo4j", "12345678"))
@@ -30,7 +49,7 @@ print("Se han borrado todos los nodos")
 
 #Iteramos nuestra creacion de nodos con los resultados que obtuvimos en nuestra consulta
 for result in limited_results:
-    # Almacenamos nuestro atributo aired en una variable para poder acceder de manera sencilla a start y end
+    # Almacenamos nuestro atributo aired en un a variable para poder acceder de manera sencilla a start y end
 
     aired=result["Aired"]
  
@@ -97,8 +116,10 @@ for result in limited_results:
     relacion5=Relationship(anime_node,"Estudio:",Studios_node)
     graph.create(relacion5)
 
-
-print("Se crearon los nodos")
+if collection.count_documents(query1)<1:
+    print("En esta consulta no se han encontrado documentos de resultado")
+else:
+    print("Se crearon los nodos")
 #print("consulta para ver toda la base de datos, consultas de cada equipo y que sea automatizada, aprender a manejar mejor los nodos y que cada nodo se controle cuales de los atributos se muestran en los nodos")
 
 
